@@ -1,0 +1,9 @@
+altair==4.2.2
+geopy==2.3.0
+matplotlib==3.4.3
+numpy==1.21.2
+pandas==1.5.3
+pytz==2022.7.1
+skyfield==1.46
+streamlit==1.17.0
+tzwhere==3.0.3
