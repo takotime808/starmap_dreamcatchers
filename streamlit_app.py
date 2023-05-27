@@ -1,11 +1,12 @@
-# from collections import namedtuple
-# import altair as alt
-# import math
-# import pandas as pd
+""" Streamlit app to generate star charts/maps based on user input date, time, and location data."""
 import streamlit as st
 from datetime import datetime
 from geopy import Nominatim
-from tzwhere import tzwhere
+try:
+    from src.stardreamcatcher.tzwhere_v303 import tzwhere
+except Exception as e:
+    print(e)
+    from tzwhere import tzwhere
 from pytz import timezone, utc
 
 import numpy as np
@@ -18,50 +19,95 @@ from skyfield.data import hipparcos, stellarium
 from skyfield.projections import build_stereographic_projection
 from skyfield.constants import GM_SUN_Pitjeva_2005_km3_s2 as GM_SUN
 
-# from utils import load_data, load_data_cam, collect_celestial_data, create_star_chart
-
+# import os
+import argparse
 import warnings
-
 warnings.filterwarnings("ignore")
+
+# from utils import mkdir_if_it_dne, load_data, load_data_cam, \
+#     collect_celestial_data, create_star_chart
+
 
 """
 # Custom Star Chart Generation #
 
+Streamlit app to generate star charts/maps based on user input date, time, and location data.
+
 """
 
 
+parser = argparse.ArgumentParser(description="Custom Star Chart Generation")
+# TODO: mkdir_if_dne func and replace hardcoded paths with input params
+# parser.add_argument("-d", "--data_path", type=str, default=r"./data/", metavar="str",
+#                     help="dir where default data is stored. (default: './data/')")
+# parser.add_argument("-o", "--output_dir", type=str, default=r"./figs/", metavar="str",
+#                     help="dir to save generate figures. (default: './figs/')")
+parser.add_argument("-fsx", "--figsize_x", type=int, default=12, metavar="int",
+                    help="figsize to be is plt.figure(figsize=(fsx,fsy)). (default: 12)")
+parser.add_argument("-fsy", "--figsize_y", type=int, default=12, metavar="int",
+                    help="figsize to be is plt.figure(figsize=(fsx,fsy)). (default: 12)")
+parser.add_argument("-mss", "--max_star_size", type=int, default=500, metavar="int",
+                    help="maximum size to be used when plotting stars on map. (default: 500)")
+args = parser.parse_args()
+# DATA_PATH = os.getenv("DATA_PATH", "./data")
+# FIGS_PATH = os.getenv("DATA_PATH", "./figs")
+
+# st.markdown("----")
+# st.markdown("we expect numpy==1.21.2, ans we get:")
+# st.write(f"\n\n\nNUMPY VERSION:\n{np.__version__}\n\n\n")
+# # st.markdown(f"tzwhere.__version__: {tzwhere.__version__}")
+# import sys
+# st.markdown(f"python version: {sys.version}")
+# st.markdown("----")
+
+def mkdir_if_it_dne(path):
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    return
+
 def load_data():
     # load celestial data
-    # de421 shows position of earth and sun in space
+    # de421 shows position of earth and sun in space/
     eph = load("./data/de421.bsp")
 
-    # hipparcos dataset contains star location data
-    with load.open(hipparcos.URL) as f:
-        stars = hipparcos.load_dataframe(f)
+    # hipparcos dataset contains star location data.
+    try:
+        with load.open("./data/hip_main.dat") as f:
+            stars = hipparcos.load_dataframe(f)
+    except:
+        # Pull data from online, if local copy of data fails to load.
+        # NOTE: This causes issues with the share.streamlit.io hosted app.
+        print("# HIT 1st EXCEPT in load_data()#")
+        st.markdown("# HIT 1st EXCEPT in load_data()#")
+        with load.open(hipparcos.URL) as f:
+            stars = hipparcos.load_dataframe(f)
 
     # And the constellation outlines come from Stellarium.  We make a list
     # of the stars at which each edge stars, and the star at which each edge
     # ends.
+    try:
+        # Access local copy of [`constellationship.fab`](./data/constellationship.fab) data.
+        with load.open("./data/constellationship.fab") as f:
+            constellations = stellarium.parse_constellations(f)
+    except:
+        # Pull data from online, if local copy of data fails to load.
+        # NOTE: This causes issues with the share.streamlit.io hosted app
+        print("# HIT 2nd EXCEPT in load_data()#")
+        st.markdown("# HIT 2nd EXCEPT in load_data()#")
+        url = (
+            "https://raw.githubusercontent.com/Stellarium/stellarium/master"
+            "/skycultures/modern_st/constellationship.fab"
+        )
 
-    url = (
-        "https://raw.githubusercontent.com/Stellarium/stellarium/master"
-        "/skycultures/modern_st/constellationship.fab"
-    )
-
-    with load.open(url) as f:
-        constellations = stellarium.parse_constellations(f)
+        with load.open(url) as f:
+            constellations = stellarium.parse_constellations(f)
 
     return eph, stars, constellations
 
-
 def load_data_cam(url_or_other_path="./data/cam.constellationship.fab"):
-    url = url_or_other_path
-
-    with load.open(url) as f:
+    with load.open(url_or_other_path) as f:
         constellations_cam = stellarium.parse_constellations(f)
-
     return constellations_cam
-
 
 def collect_celestial_data(location, when):
     # get latitude and longitude of our location
@@ -115,12 +161,11 @@ def collect_celestial_data(location, when):
 
     return stars, edges_star1, edges_star2
 
-
 def create_star_chart(
     location,
     when,
-    chart_size_dim0,
-    chart_size_dim1,
+    figsize_x,
+    figsize_y,
     max_star_size,
     eph,
     stars,
@@ -132,7 +177,7 @@ def create_star_chart(
     limiting_magnitude = 10
     bright_stars = stars.magnitude <= limiting_magnitude
     magnitude = stars["magnitude"][bright_stars]
-    fig, ax = plt.subplots(figsize=(chart_size, chart_size))
+    fig, ax = plt.subplots(figsize=(figsize_x, figsize_y))
 
     # use the night sky color code
     border = plt.Circle((0, 0), 1, color="#041A40", fill=True)
@@ -180,14 +225,25 @@ def create_star_chart(
     #     plt.show()
     return fig
 
-
 # with st.echo(code_location='below'):
 with st.form("my_form", clear_on_submit=False):
+    # # Make sure paths exist
+    # mkdir_if_it_dne(args.data_path)
+    # mkdir_if_it_dne(args.output_dir)
 
     # TODO: User input location.
     location = st.text_input(
         label="Input Desired Location:", value="Fort Lauderdale, FL",
     )
+
+    # Data entry instructions.
+    st.markdown("----")
+    st.markdown("""
+                Entered dates should have the format displayed by the examples:
+                - Dates: `%Y-%m-%d`, `YYYY-mm-dd`
+                - Times: `%H:%M`, military time `HH:MM`
+                """)
+    st.markdown("")
 
     # User input datetime.
     _date_ = st.date_input(
@@ -197,16 +253,29 @@ with st.form("my_form", clear_on_submit=False):
         label="Input Desired Time:", value="10:01",
     )
 
-    # Other definable parameters.
-    chart_size = 12
-    max_star_size = 500
+    # # Other definable parameters.
+    # figsize = 12 # = args.figsize
+    # max_star_size = 500 # = args.max_star_size
+#     import subprocess
+#     subprocess.run(["pip", "uninstall", "numpy"])
+#     subprocess.run(["pip", "install", "numpy==1.21.2"])
 
     # Every form must have a submit button.
     submitted = st.form_submit_button("Submit")
     if submitted:
+#         import subprocess
+#         subprocess.run(["pip", "install", "numpy==1.21.2"])
+#         st.write(f'AGAIN:...run command `subprocess.run(["pip", "install", "numpy==1.21.2"])` and check np version again:')
+#         st.write(f"\n\n\nNUMPY VERSION:\n{np.__version__}\n\n\n")
         when = f"{_date_} {_time_}"
         st.markdown(f"#### Submitted datetime: {when} ####")
         st.markdown(f"#### Submitted location: {location} ####")
+
+#         st.markdown("## REVERT to hard-coded...to troubleshoot")
+#         location = 'Virginia Beach, VA'
+#         when = '2021-05-17 00:00'
+#         st.markdown(f"#### Submitted datetime: {when} ####")
+#         st.markdown(f"#### Submitted location: {location} ####")
 
         # load celestial data
         eph, stars, constellations = load_data()
@@ -228,14 +297,14 @@ with st.form("my_form", clear_on_submit=False):
         # figname = f"./figs/{figname.lower()}.png"
         figname = False
         star_chart = create_star_chart(
-            location,
-            when,
-            chart_size,
-            chart_size,
-            max_star_size,
-            eph,
-            stars,
-            constellations,
+            location=location,
+            when=when,
+            figsize_x=args.figsize_x,
+            figsize_y=args.figsize_y,
+            max_star_size=args.max_star_size,
+            eph=eph,
+            stars=stars,
+            constellations=constellations,
             lines_xy_cam=lines_xy_cam,
             savefig=figname,
         )
