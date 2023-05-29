@@ -226,7 +226,8 @@ def create_star_chart(
     return fig
 
 # with st.echo(code_location='below'):
-with st.form("my_form", clear_on_submit=False):
+with st.form("caddy2_form", clear_on_submit=False):
+    # progress_bar = st.progress(0)
     # # Make sure paths exist
     # mkdir_if_it_dne(args.data_path)
     # mkdir_if_it_dne(args.output_dir)
@@ -247,8 +248,11 @@ with st.form("my_form", clear_on_submit=False):
 
     # User input datetime.
     _date_ = st.date_input(
-        label="Input Desired Date:",
+        label="Input Desired Date:", 
+        # label="Input Desired Date:", value=datetime.date(2019, 3, 25),
+        # # value = datetime.datetime(2019, 3, 25),
     )
+
     _time_ = st.text_input(
         label="Input Desired Time:", value="10:01",
     )
@@ -256,26 +260,28 @@ with st.form("my_form", clear_on_submit=False):
     # # Other definable parameters.
     # figsize = 12 # = args.figsize
     # max_star_size = 500 # = args.max_star_size
-#     import subprocess
-#     subprocess.run(["pip", "uninstall", "numpy"])
-#     subprocess.run(["pip", "install", "numpy==1.21.2"])
+    # import subprocess
+    # subprocess.run(["pip", "uninstall", "numpy"])
+    # subprocess.run(["pip", "install", "numpy==1.21.2"])
 
     # Every form must have a submit button.
     submitted = st.form_submit_button("Submit")
     if submitted:
-#         import subprocess
-#         subprocess.run(["pip", "install", "numpy==1.21.2"])
-#         st.write(f'AGAIN:...run command `subprocess.run(["pip", "install", "numpy==1.21.2"])` and check np version again:')
-#         st.write(f"\n\n\nNUMPY VERSION:\n{np.__version__}\n\n\n")
+        progress_bar = st.progress(0)
+        # import subprocess
+        # subprocess.run(["pip", "install", "numpy==1.21.2"])
+        # st.write(f'AGAIN:...run command `subprocess.run(["pip", "install", "numpy==1.21.2"])` and check np version again:')
+        # st.write(f"\n\n\nNUMPY VERSION:\n{np.__version__}\n\n\n")
         when = f"{_date_} {_time_}"
         st.markdown(f"#### Submitted datetime: {when} ####")
         st.markdown(f"#### Submitted location: {location} ####")
+        progress_bar.progress(10)
 
-#         st.markdown("## REVERT to hard-coded...to troubleshoot")
-#         location = 'Virginia Beach, VA'
-#         when = '2021-05-17 00:00'
-#         st.markdown(f"#### Submitted datetime: {when} ####")
-#         st.markdown(f"#### Submitted location: {location} ####")
+        # st.markdown("## REVERT to hard-coded...to troubleshoot")
+        # location = 'Virginia Beach, VA'
+        # when = '2021-05-17 00:00'
+        # st.markdown(f"#### Submitted datetime: {when} ####")
+        # st.markdown(f"#### Submitted location: {location} ####")
 
         # load celestial data
         eph, stars, constellations = load_data()
@@ -284,13 +290,16 @@ with st.form("my_form", clear_on_submit=False):
         # TODO: Pull out into a utility function.
         stars, edges_star1, edges_star2 = collect_celestial_data(location, when)
         constellations_cam = load_data_cam("./data/constellationship_cam.fab")
+        progress_bar.progress(25)
         edges_cam = [edge for name, edges in constellations_cam for edge in edges]
         edges_star1_cam = [star1 for star1, star2 in edges_cam]
         edges_star2_cam = [star2 for star1, star2 in edges_cam]
+        progress_bar.progress(50)
 
         xy1_cam = stars[["x", "y"]].loc[edges_star1_cam].values
         xy2_cam = stars[["x", "y"]].loc[edges_star2_cam].values
         lines_xy_cam = np.rollaxis(np.array([xy1_cam, xy2_cam]), 1)
+        progress_bar.progress(75)
 
         # Create star chart.
         # figname = location.replace(" ", "_").replace(",","_") + "_" + when.replace("-", "_").replace(":", "").replace(" ", "_")
@@ -309,3 +318,4 @@ with st.form("my_form", clear_on_submit=False):
             savefig=figname,
         )
         st.pyplot(star_chart)
+        progress_bar.progress(100)
