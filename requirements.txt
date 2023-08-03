@@ -20,4 +20,11 @@ ujson==5.7.0
 # # ezdxf==1.0.3 
 cadquery==2.2.0
 
+# For __dreamcatcher_trimesh.py
+trimesh==3.22.0
+
+# # For current foo.py
+# pythreejs==2.4.2
+
 # numpy==1.21.2
+
