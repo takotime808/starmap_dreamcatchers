@@ -12,4 +12,12 @@ Shapely==2.0.1
 simplejson==3.19.1
 ujson==5.7.0
 
+# # for 3d plotly, to avoid: 
+# #   ValueError: Mime type rendering requires nbformat>=4.2.0 but it is not installed
+# nbformat>=4.2.0
+
+# # Try extruding with a cad library like `ezdxf` or `cadquery`
+# # ezdxf==1.0.3 
+cadquery==2.2.0
+
 # numpy==1.21.2
