@@ -1,7 +1,8 @@
 """ Streamlit app to generate star charts/maps based on user input date, time, and location data."""
 import streamlit as st
 from datetime import datetime
-from geopy import Nominatim
+# from geopy import Nominatim
+from geopy import Photon
 try:
     from src.stardreamcatcher.tzwhere_v303 import tzwhere
 except Exception as e:
@@ -111,7 +112,8 @@ def load_data_cam(url_or_other_path="./data/cam.constellationship.fab"):
 
 def collect_celestial_data(location, when):
     # get latitude and longitude of our location
-    locator = Nominatim(user_agent="myGeocoder")
+    # locator = Nominatim(user_agent="myGeocoder")
+    locator = Photon(user_agent="myGeocoder")
     location = locator.geocode(location)
     lat, long = location.latitude, location.longitude
 
