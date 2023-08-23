@@ -3,7 +3,10 @@
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://stardreamcatcher.streamlit.app/)
 
 > Streamlit deployment can be seen by clicking above badge/icon above / link below:
->> - [https://stardreamcatcher.streamlit.app/](https://stardreamcatcher.streamlit.app/)
+>> [https://stardreamcatcher.streamlit.app/](https://stardreamcatcher.streamlit.app/)
+
+> [Health Universe](https://www.healthuniverse.com/) deployment:
+>> [https://apps.healthuniverse.com/cbg-wnn-nls/](https://apps.healthuniverse.com/cbg-wnn-nls/)
 
 Star-charts are generated through the [hosted streamlit page](https://stardreamcatcher.streamlit.app/) based on user designated location, date, and military formatted time.
 
